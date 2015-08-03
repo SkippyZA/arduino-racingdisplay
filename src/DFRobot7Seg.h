@@ -5,6 +5,8 @@
 #ifndef SIMCONSOLE_DFROBOT7SEG_H
 #define SIMCONSOLE_DFROBOT7SEG_H
 
+#define SEGMENT_COUNT 8
+
 #include <Arduino.h>
 #include <WString.h>
 
@@ -23,7 +25,7 @@ public:
     void print(const char* data);
     void print(String data);
 
-    
+    void update();
 
 private:
     uint8_t clockPin;
@@ -31,6 +33,9 @@ private:
     uint8_t dataPin;
 
 private:
+    byte buffer[SEGMENT_COUNT];
+    uint8_t bitIndex = 0;
+
     // 0, 1, 2,3 ,4, 5, 6, 7, 8, 9, ALL OFF
     byte tab[11] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 0x80, 0x90, 0xff};
     // a, b, c, d, e, f, g, h, i, j, k, l, o, m, n, o, p, q, r, s, t, u, v, w, x, y, z

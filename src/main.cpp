@@ -79,10 +79,12 @@ void loop() {
     PixelColor color;
 
     if (stringComplete) {
+#ifdef DEBUG
         Serial.print("Command: ");
         Serial.print(incomingSerialMessage.command);
         Serial.print(", Value: ");
         Serial.println(incomingSerialMessage.value);
+#endif
 
         switch(incomingSerialMessage.command) {
             case 1:
@@ -121,6 +123,8 @@ void loop() {
 
         stringComplete = false;
     }
+
+    display.update();
 }
 
 void serialEvent() {
