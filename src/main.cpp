@@ -29,7 +29,8 @@ struct PixelColor {
     uint8_t b = 0;
 };
 
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(16, 11, NEO_GRB + NEO_KHZ800);
+uint8_t pixelDataPin = 11;
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(16, pixelDataPin, NEO_GRB + NEO_KHZ800);
 PixelColor pixelColors[PIXEL_COUNT];
 uint8_t pixelMap[PIXEL_COUNT] = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
 uint16_t lastPixelDisplay = 0;
@@ -50,7 +51,7 @@ void updatePixels(uint16_t display) {
     lastPixelDisplay = display;
 
     for(uint8_t i = 0; i < PIXEL_COUNT; i++) {
-        uint16_t toWrite = display & (0b0000000000000001 << i);
+        uint16_t toWrite = display & (1 << i);
 
         if(toWrite) {
             pixels.setPixelColor(i, pixelColors[i].r, pixelColors[i].g, pixelColors[i].b);

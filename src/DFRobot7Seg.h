@@ -33,7 +33,7 @@ private:
     uint8_t dataPin;
 
 private:
-    byte buffer[SEGMENT_COUNT];
+    byte buffer[SEGMENT_COUNT] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
     uint8_t bitIndex = 0;
 
     // 0, 1, 2,3 ,4, 5, 6, 7, 8, 9, ALL OFF
