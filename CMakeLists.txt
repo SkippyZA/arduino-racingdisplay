@@ -7,7 +7,7 @@ set(SOURCE_FILES
     src/main.cpp)
 
 include_directories("lib/Adafruit_NeoPixel")
-#include_directories("lib/Wire")
+include_directories("lib/Wire")
 
 include_directories("/Users/steven/.platformio/packages/framework-arduinoavr/cores/arduino/")
 include_directories("/Users/steven/.platformio/packages/toolchain-atmelavr/avr/include")

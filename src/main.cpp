@@ -7,9 +7,13 @@
 #endif
 
 #define PIXEL_COUNT 16
-#define SERIAL_BUFFER_LENGTH 512
+#define SERIAL_BUFFER_LENGTH 20
+#define GEAR_ADDRESS 0x4
+
+//#define DEBUG
 
 #include <Arduino.h>
+#include <Wire.h>
 #include <HardwareSerial.h>
 #include <Adafruit_NeoPixel.h>
 #include "DFRobot7Seg.h"
@@ -33,7 +37,7 @@ uint8_t pixelDataPin = 11;
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(16, pixelDataPin, NEO_GRB + NEO_KHZ800);
 PixelColor pixelColors[PIXEL_COUNT];
 uint8_t pixelMap[PIXEL_COUNT] = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
-uint16_t lastPixelDisplay = 0;
+uint16_t lastPixelDisplay = 65535;
 
 // This is for the serial crap
 //////////////////////////////////////////////////////
@@ -63,7 +67,27 @@ void updatePixels(uint16_t display) {
     pixels.show();
 }
 
+void updateGear(int8_t gear) {
+
+    switch (gear) {
+        case 0:
+            gear = 10;
+            break;
+        case -1:
+            gear = 11;
+            break;
+        default:
+            break;
+    }
+
+    Wire.beginTransmission(GEAR_ADDRESS); // transmit to device GEAR_ADDRESS
+    Wire.write(gear);                     // sends one byte
+    Wire.endTransmission();               // stop transmitting
+}
+
 void setup() {
+    Wire.begin();
+
     Serial.begin(9600);
     Serial.println("RacingLedDisplay");
     Serial.println("----------------");
@@ -72,7 +96,10 @@ void setup() {
     pixels.begin();
 
     pixels.setBrightness(10);
+    pixels.show();
     updatePixels(lastPixelDisplay);
+
+    updateGear(0);
 }
 
 void loop() {
@@ -118,6 +145,8 @@ void loop() {
             case 4:
                 display.print(incomingSerialMessage.value);
                 break;
+            case 5:
+                updateGear((int8_t) atoi(incomingSerialMessage.value));
             default:
                 break;
         }
@@ -129,7 +158,7 @@ void loop() {
 }
 
 void serialEvent() {
-    while (Serial.available()) {
+    if (Serial.available()) {
         char inChar = (char) Serial.read();
 
         if(inChar == '|') {
@@ -147,6 +176,8 @@ void serialEvent() {
 
             stringComplete = true;
             serialByteCounter = 0;
+
+            Serial.println("ACK");
         }
     }
 }
