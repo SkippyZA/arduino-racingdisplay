@@ -16,7 +16,11 @@
 #include <Wire.h>
 #include <HardwareSerial.h>
 #include <Adafruit_NeoPixel.h>
+#include <Messenger.h>
 #include "DFRobot7Seg.h"
+
+Messenger message = Messenger('|');
+char buffer[SERIAL_BUFFER_LENGTH];
 
 // 8x 7seg
 //////////////////////////////////////////////////////
@@ -38,18 +42,6 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(16, pixelDataPin, NEO_GRB + NEO_KHZ
 PixelColor pixelColors[PIXEL_COUNT];
 uint8_t pixelMap[PIXEL_COUNT] = { 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
 uint16_t lastPixelDisplay = 65535;
-
-// This is for the serial crap
-//////////////////////////////////////////////////////
-struct SerialMessage {
-    uint8_t command;
-    char* value;
-};
-
-uint16_t serialByteCounter = 0;
-char inputString[SERIAL_BUFFER_LENGTH];
-SerialMessage incomingSerialMessage;
-boolean stringComplete = false;
 
 void updatePixels(uint16_t display) {
     lastPixelDisplay = display;
@@ -85,42 +77,21 @@ void updateGear(int8_t gear) {
     Wire.endTransmission();               // stop transmitting
 }
 
-void setup() {
-    Wire.begin();
+uint8_t command = 0;
+uint8_t pixelIndex;
+PixelColor color;
 
-    Serial.begin(9600);
-    Serial.println("RacingLedDisplay");
-    Serial.println("----------------");
+void messageReady() {
+    command = (uint8_t) message.readInt();
+    message.copyString(buffer, SERIAL_BUFFER_LENGTH);
 
-    display.print("        ");
-    pixels.begin();
-
-    pixels.setBrightness(10);
-    pixels.show();
-    updatePixels(lastPixelDisplay);
-
-    updateGear(0);
-}
-
-void loop() {
-    uint8_t pixelIndex;
-    PixelColor color;
-
-    if (stringComplete) {
-#ifdef DEBUG
-        Serial.print("Command: ");
-        Serial.print(incomingSerialMessage.command);
-        Serial.print(", Value: ");
-        Serial.println(incomingSerialMessage.value);
-#endif
-
-        switch(incomingSerialMessage.command) {
+    switch(command) {
             case 1:
-                pixels.setBrightness((uint8_t) atoi(incomingSerialMessage.value));
+                pixels.setBrightness((uint8_t) atoi(buffer));
                 pixels.show();
                 break;
             case 2:
-                pixelIndex = (uint8_t) atoi(strtok(incomingSerialMessage.value, "="));
+                pixelIndex = (uint8_t) atoi(strtok(buffer, "="));
 
                 color.r = (uint8_t) atoi(strtok(NULL, ","));
                 color.g = (uint8_t) atoi(strtok(NULL, ","));
@@ -140,44 +111,42 @@ void loop() {
                 pixelColors[pixelMap[pixelIndex]] = color;
                 break;
             case 3:
-                updatePixels((uint16_t) atoi(incomingSerialMessage.value));
+                updatePixels((uint16_t) atoi(buffer));
                 break;
             case 4:
-                display.print(incomingSerialMessage.value);
+                display.print(buffer);
                 break;
             case 5:
-                updateGear((int8_t) atoi(incomingSerialMessage.value));
+                updateGear((int8_t) atoi(buffer));
             default:
                 break;
-        }
+    }
+}
 
-        stringComplete = false;
+void setup() {
+    Wire.begin();
+
+    Serial.begin(9600);
+    Serial.println("RacingLedDisplay");
+    Serial.println("----------------");
+
+    display.print("        ");
+    pixels.begin();
+
+    pixels.setBrightness(10);
+    pixels.show();
+    updatePixels(lastPixelDisplay);
+
+    updateGear(0);
+
+    message.attach(messageReady);
+}
+
+void loop() {
+
+    while (Serial.available()) {
+        message.process(Serial.read());
     }
 
     display.update();
-}
-
-void serialEvent() {
-    if (Serial.available()) {
-        char inChar = (char) Serial.read();
-
-        if(inChar == '|') {
-            inputString[serialByteCounter] = '\0';
-            incomingSerialMessage.command = (uint8_t) atoi(inputString);
-            serialByteCounter = 0;
-        } else if (inChar == '\n') {
-            inputString[serialByteCounter++] = '\0';
-        } else {
-            inputString[serialByteCounter++]= inChar;
-        }
-
-        if (inChar == '\n') {
-            incomingSerialMessage.value = inputString;
-
-            stringComplete = true;
-            serialByteCounter = 0;
-
-            Serial.println("ACK");
-        }
-    }
 }
