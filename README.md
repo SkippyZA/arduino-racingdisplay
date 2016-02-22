@@ -33,11 +33,14 @@ eg: `5|3` will set the gear indicator to display 3
 ---
 
 Prototyping some ideas
+
 ![prototying some ideas](http://i.imgur.com/GJJd8CB.jpg?1)
 
 First iteration
+
 ![first iteration](http://i.imgur.com/SyNfM5q.jpg?1)
 
 Updated for a better location
+
 ![updated for a better location](http://i.imgur.com/09S1FXD.jpg?1)
 
